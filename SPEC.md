@@ -53,3 +53,4 @@ Here are the flags and what they do:
     * fetch all `subscribers` where `unsubscribe` is set to `false`
     * loop over every `subscriber` and send the email
     * the bottom of the email should contain a `unsubscribe` link that links to the email for this subscriber
+* `--send-latest-if-skipped` [optional] - specifically for the `--action blast` will send the latest email even if it's been skipped.

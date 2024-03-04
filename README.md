@@ -5,6 +5,7 @@
 * Contains a server with two forms for `subscribe` / `unsubscribe`.
 * Uses `sqlite` to store subscriber / which emails have been sent to whom.
 * Containts a `script` for cron to send daily or weekly emails, "latest only".
+* You can use `env` vars instead of flags.
 
 ```bash
 Sends newsletter updates from an RSS feed
