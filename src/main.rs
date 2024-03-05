@@ -1,7 +1,4 @@
-
 mod blast;
-mod config;
-mod context;
 mod db;
 mod email_sender;
 mod flags;
@@ -9,36 +6,138 @@ mod model;
 mod routes;
 mod rss_processor;
 mod server;
+mod types;
 mod utils;
 
 use blast::blast;
-use config::get_config;
-use context::Context;
 use model::Model;
 use server::main as server_main;
+use types::{BlastConfig, BlastContext, ServerConfig, ServerContext, SubscriberConfig};
+
+use flags::{
+    email_arg, feed_url_arg, port_arg, smtp_email_arg, smtp_host_arg, smtp_pass_arg, smtp_port_arg,
+    sqlite_file_arg, unsubscribe_arg, ConfigExtractor,
+};
+
+use clap::Command;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    let config = get_config();
-    let model = Model::new(&config.sqlite_file, &config.feed_url)
-        .await
-        .expect("Failed to create model");
-    let context = Context {
-        config: config.clone(),
-        model,
-    };
+    let matches = Command::new("rss-newsletter")
+        .version("1.0")
+        .about("Manages subscriptions and sends updates")
+        .subcommand(
+            Command::new("blast")
+                .about("Sends the latest RSS post to all subscribers")
+                .arg(sqlite_file_arg())
+                .arg(smtp_host_arg())
+                .arg(smtp_port_arg())
+                .arg(smtp_email_arg())
+                .arg(smtp_pass_arg())
+                .arg(feed_url_arg())
+                .arg_required_else_help(true),
+        )
+        .subcommand(
+            Command::new("server")
+                .alias("serve")
+                .about("Starts the server for subscribing/unsubscribing to the newsletter")
+                .arg(sqlite_file_arg())
+                .arg(port_arg())
+                .arg(feed_url_arg())
+                .arg_required_else_help(true),
+        )
+        .subcommand(
+            Command::new("subscriber")
+                .alias("sub")
+                .alias("subsrcibe")
+                .about("Interact with a subscriber.")
+                .arg(feed_url_arg())
+                .arg(sqlite_file_arg())
+                .arg(unsubscribe_arg())
+                .arg(email_arg()),
+        )
+        .arg_required_else_help(true)
+        .get_matches();
 
-    match config.action.as_str() {
-        "serve" => {
-            println!("Starting server...");
-            let _server = server_main(context).await;
+    match matches.subcommand() {
+        Some(("blast", sub_m)) => {
+            let ce = ConfigExtractor::new(sub_m.clone());
+
+            let config = BlastConfig {
+                sqlite_file: ce.get_sqlite_file(),
+                smtp_host: ce.get_smtp_host(),
+                smtp_port: ce.get_smtp_port(),
+                smtp_email: ce.get_smtp_email(),
+                smtp_pass: ce.get_smtp_pass(),
+                feed_url: ce.get_feed_url(),
+            };
+
+            let model = Model::new(&config.sqlite_file, &config.feed_url)
+                .await
+                .expect("Failed to create model");
+
+            let context = BlastContext { config, model };
+
+            blast(context).await?;
+
+            Ok(())
         }
-        "blast" => {
-            println!("Blasting emails");
-            let _blast = blast(context).await;
+        Some(("server", sub_m)) => {
+            let ce = ConfigExtractor::new(sub_m.clone());
+
+            let config = ServerConfig {
+                sqlite_file: ce.get_sqlite_file(),
+                feed_url: ce.get_feed_url(),
+                port: ce.get_port(),
+            };
+
+            let model = Model::new(&config.sqlite_file, &config.feed_url)
+                .await
+                .expect("Failed to create model");
+
+            let context = ServerContext { model, config };
+
+            server_main(context).await?;
+
+            Ok(())
         }
-        _ => unreachable!(), // assuming command-line argument parsing ensures this
+        Some(("subscriber", sub_m)) => {
+            let ce: ConfigExtractor = ConfigExtractor::new(sub_m.clone());
+
+            let config = SubscriberConfig {
+                sqlite_file: ce.get_sqlite_file(),
+                feed_url: ce.get_feed_url(),
+                email: ce.get_email(),
+                unsubscribe: ce.get_unsubscribe(),
+            };
+
+            let model = Model::new(&config.sqlite_file, &config.feed_url)
+                .await
+                .expect("Failed to create model");
+            if config.unsubscribe {
+                model
+                    .unsubscribe(&config.email)
+                    .await
+                    .expect("Failed to unsubscribe");
+            } else {
+                model
+                    .subscribe(&config.email)
+                    .await
+                    .expect("Failed to Subscribe");
+            }
+
+            let sub = model
+                .get_subscriber(&config.email)
+                .await
+                .expect("Failed to get subscriber");
+
+            match sub {
+                Some(sub) => print!("Subscriber: {}", sub),
+                None => print!("Subscriber not found"),
+            }
+
+            Ok(())
+        }
+        _ => unreachable!("The CLI parser ensures that only defined subcommands are used"),
     }
-
-    Ok(())
 }

@@ -1,7 +1,6 @@
-use crate::config::Config;
-use crate::context::Context;
 use crate::email_sender::{send_email, EmailConfig};
 use crate::rss_processor::fetch_rss;
+use crate::types::{BlastConfig as Config, BlastContext as Context};
 use rss::Item as RSSItem;
 
 #[derive(Debug)]
@@ -31,7 +30,10 @@ pub async fn ready_latest_item(context: &Context) -> Option<RSSItem> {
     for item in feed.old {
         match item.guid() {
             Some(item_guid) => {
-                model.insert_feed_item(item_guid.value(), true).await.expect("Failed to insert old feed item");
+                model
+                    .insert_feed_item(item_guid.value(), true)
+                    .await
+                    .expect("Failed to insert old feed item");
             }
             None => continue,
         }
@@ -39,8 +41,14 @@ pub async fn ready_latest_item(context: &Context) -> Option<RSSItem> {
 
     match feed.latest.guid() {
         Some(item_guid) => {
-            model.insert_feed_item(item_guid.value(), false).await.expect("Failed to insert latest feed item");
-            let db_item = model.get_feed_item(item_guid.value()).await.expect("Failed to get feed item")?;
+            model
+                .insert_feed_item(item_guid.value(), false)
+                .await
+                .expect("Failed to insert latest feed item");
+            let db_item = model
+                .get_feed_item(item_guid.value())
+                .await
+                .expect("Failed to get feed item")?;
             if db_item.all_emails_sent || db_item.skip {
                 return None;
             }
@@ -133,8 +141,11 @@ pub async fn blast(context: Context) -> std::io::Result<()> {
     // Check if there were any failures
     if failed_emails.is_empty() {
         println!("Success 100%: All emails sent successfully.");
-        model.mark_all_emails_sent(latest_post_guid).await.expect("Failed to mark all emails as sent");
-    } 
+        model
+            .mark_all_emails_sent(latest_post_guid)
+            .await
+            .expect("Failed to mark all emails as sent");
+    }
 
     Ok(())
 }

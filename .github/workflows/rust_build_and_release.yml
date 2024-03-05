@@ -21,6 +21,22 @@ jobs:
           toolchain: stable
           override: true
 
+      - name: Install SQLx CLI
+        run: cargo install sqlx-cli
+
+      - name: Create Database Directory
+        run: mkdir -p ${{ github.workspace }}/data
+
+      - name: Create Database
+        env:
+          DATABASE_URL: sqlite://${{ github.workspace }}/data/newsletter.sqlite
+        run: |
+          echo "DATABASE_URL=${DATABASE_URL}" >> $GITHUB_ENV
+          cargo sqlx database create
+
+      - name: Run Migrations
+        run: cargo sqlx migrate run
+
       - name: Build Release
         run: cargo build --release
 

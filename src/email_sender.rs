@@ -1,8 +1,8 @@
-use lettre::transport::smtp::authentication::Credentials;
-use lettre::{Message, message::Mailbox, SmtpTransport, Transport};
-use lettre::transport::smtp::Error as SmtpError;
 use lettre::address::AddressError;
 use lettre::message::header::ContentType;
+use lettre::transport::smtp::authentication::Credentials;
+use lettre::transport::smtp::Error as SmtpError;
+use lettre::{message::Mailbox, Message, SmtpTransport, Transport};
 use std::fmt;
 
 #[derive(Debug)]
@@ -44,31 +44,41 @@ pub struct EmailConfig {
 
 pub fn send_email(config: EmailConfig) -> Result<(), EmailSendError> {
     let email = Message::builder()
-        .from(config.smtp_email.parse::<Mailbox>().map_err(EmailSendError::from)?)
-        .reply_to(config.smtp_email.parse::<Mailbox>().map_err(EmailSendError::from)?)
+        .from(
+            config
+                .smtp_email
+                .parse::<Mailbox>()
+                .map_err(EmailSendError::from)?,
+        )
+        .reply_to(
+            config
+                .smtp_email
+                .parse::<Mailbox>()
+                .map_err(EmailSendError::from)?,
+        )
         .to(config.to.parse::<Mailbox>().map_err(EmailSendError::from)?)
         .subject(config.subject)
         .header(ContentType::TEXT_HTML)
         .body(config.body)
         .unwrap();
-    
+
     let creds = Credentials::new(config.smtp_email, config.smtp_password);
-    
+
     // Open a remote connection to gmail
     let mailer = SmtpTransport::relay(&config.smtp_host)
         .unwrap()
         .credentials(creds)
         .build();
-    
+
     // Send the email
     match mailer.send(&email) {
         Ok(_) => {
-             println!("Email sent successfully!");
-             Ok(())
-         },
-         Err(e) => {
-             println!("Could not send email: {:?}", e);
-             Err(EmailSendError::Smtp(e))
-         },
+            println!("Email sent successfully!");
+            Ok(())
+        }
+        Err(e) => {
+            println!("Could not send email: {:?}", e);
+            Err(EmailSendError::Smtp(e))
+        }
     }
 }

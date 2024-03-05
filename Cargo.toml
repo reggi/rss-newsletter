@@ -2,27 +2,6 @@
 name = "rss-newsletter"
 version = "0.1.0"
 edition = "2021"
-default-run = "rss-newsletter"
-
-[[bin]]
-name = "demo"
-path = "cli/demo.rs"
-
-[[bin]]
-name = "rss-newsletter"
-path = "src/main.rs"
-
-[[bin]]
-name = "serve"
-path = "cli/serve.rs"
-
-[[bin]]
-name = "subscribe"
-path = "cli/subscribe.rs"
-
-[[bin]]
-name = "flags"
-path = "cli/flags.rs"
 
 [dependencies]
 actix-web = "4.0"
@@ -35,7 +14,7 @@ lettre = "0.11.4"
 lettre_email = "0.9.4"
 clap = { version = "*", features = ['env'] }
 sqlx = { version = "0.7", features = [ "runtime-tokio", "sqlite"] }
-validator = { version = "0.16.1", features = ["derive"] }
+validator = { version = "0.17.0", features = ["derive"] }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

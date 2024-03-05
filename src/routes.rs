@@ -1,7 +1,7 @@
+use crate::types::ServerContext as Context;
 use actix_web::{web, HttpResponse, Responder};
 use serde::Deserialize;
 use std::sync::Arc;
-use crate::context::Context;
 
 #[derive(Deserialize)]
 pub struct SubscribeRequest {
@@ -24,23 +24,23 @@ pub async fn index() -> impl Responder {
 
 pub async fn subscribe(
     context: web::Data<Arc<Context>>,
-    form: web::Form<SubscribeRequest>
+    form: web::Form<SubscribeRequest>,
 ) -> impl Responder {
     let res = context.model.add_subscriber(&form.email).await;
     match res {
         Ok(_) => HttpResponse::Ok().body("Subscribed successfully"),
-        Err(e) => HttpResponse::InternalServerError().body(format!("Failed to subscribe: {}", e))
+        Err(e) => HttpResponse::InternalServerError().body(format!("Failed to subscribe: {}", e)),
     }
 }
 
 pub async fn unsubscribe(
     context: web::Data<Arc<Context>>,
-    form: web::Form<UnsubscribeRequest>
+    form: web::Form<UnsubscribeRequest>,
 ) -> impl Responder {
     let res = context.model.unsubscribe(&form.email).await;
     match res {
         Ok(_) => HttpResponse::Ok().body("Unsubscribe was successful"),
-        Err(e) => HttpResponse::InternalServerError().body(format!("Failed to unsubscribe: {}", e))
+        Err(e) => HttpResponse::InternalServerError().body(format!("Failed to unsubscribe: {}", e)),
     }
 }
 

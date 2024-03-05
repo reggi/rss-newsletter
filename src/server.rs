@@ -1,7 +1,7 @@
+use crate::routes::{index, subscribe, subscribe_form, unsubscribe, unsubscribe_form};
+use crate::types::ServerContext as Context;
 use actix_web::{web, App, HttpServer};
 use std::sync::Arc;
-use crate::context::Context;
-use crate::routes::{index, subscribe, subscribe_form, unsubscribe, unsubscribe_form};
 
 pub async fn main(context: Context) -> std::io::Result<()> {
     let address = format!("127.0.0.1:{}", context.config.port);
@@ -10,7 +10,7 @@ pub async fn main(context: Context) -> std::io::Result<()> {
     // Set up the HTTP server
     HttpServer::new(move || {
         App::new()
-        .app_data(web::Data::new(shared_context.clone()))
+            .app_data(web::Data::new(shared_context.clone()))
             .route("/", web::get().to(index)) // Define routes and handlers
             .route("/subscribe", web::get().to(subscribe_form))
             .route("/unsubscribe", web::get().to(unsubscribe_form))
@@ -21,4 +21,3 @@ pub async fn main(context: Context) -> std::io::Result<()> {
     .run() // Run the server
     .await
 }
-
