@@ -13,6 +13,7 @@ use blast::blast;
 use model::Model;
 use server::main as server_main;
 use types::{BlastConfig, BlastContext, ServerConfig, ServerContext, SubscriberConfig};
+use email_sender::{EmailConfig, send_email};
 
 use flags::{
     email_arg, feed_url_arg, port_arg, smtp_email_arg, smtp_host_arg, smtp_pass_arg, smtp_port_arg,
@@ -54,6 +55,15 @@ async fn main() -> std::io::Result<()> {
                 .arg(feed_url_arg())
                 .arg(sqlite_file_arg())
                 .arg(unsubscribe_arg())
+                .arg(email_arg()),
+        )
+        .subcommand(
+            Command::new("test-email")
+                .about("Send a test email to the provided email address.")
+                .arg(smtp_host_arg())
+                .arg(smtp_port_arg())
+                .arg(smtp_email_arg())
+                .arg(smtp_pass_arg())
                 .arg(email_arg()),
         )
         .arg_required_else_help(true)
@@ -98,6 +108,26 @@ async fn main() -> std::io::Result<()> {
             let context = ServerContext { model, config };
 
             server_main(context).await?;
+
+            Ok(())
+        }
+        Some(("test-email", sub_m)) => {
+            
+            let ce: ConfigExtractor = ConfigExtractor::new(sub_m.clone());
+
+            let config = EmailConfig {
+                body: "This is a test email".to_string(),
+                subject: "Test Email".to_string(),
+                smtp_password: ce.get_smtp_pass(),
+                smtp_host: ce.get_smtp_host(),
+                smtp_port: ce.get_smtp_port(),
+                smtp_email: ce.get_smtp_email(),
+                to: ce.get_email(),
+            };
+
+            println!("Sending email to: {}", config);
+
+            send_email(config).expect("Failed to send email");
 
             Ok(())
         }

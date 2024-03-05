@@ -110,6 +110,7 @@ pub async fn blast(context: Context) -> std::io::Result<()> {
             smtp_password: context.config.smtp_pass.clone(),
             smtp_host: context.config.smtp_host.clone(),
             smtp_email: context.config.smtp_email.clone(),
+            smtp_port: context.config.smtp_port,
             subject: title.to_string(),
             to: subscriber_email.to_string(),
         };

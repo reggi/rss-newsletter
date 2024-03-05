@@ -38,8 +38,19 @@ pub struct EmailConfig {
     pub smtp_password: String,
     pub smtp_host: String,
     pub smtp_email: String,
+    pub smtp_port: u16,
     pub subject: String,
     pub to: String,
+}
+
+impl fmt::Display for EmailConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "EmailConfig {{ smtp_email: {}, smtp_host: {}, smtp_port: {}, to: {}, subject: {}, body: {} }}",
+            self.smtp_email, self.smtp_host, self.smtp_port, self.to, self.subject, self.body
+        )
+    }
 }
 
 pub fn send_email(config: EmailConfig) -> Result<(), EmailSendError> {
@@ -68,6 +79,7 @@ pub fn send_email(config: EmailConfig) -> Result<(), EmailSendError> {
     let mailer = SmtpTransport::relay(&config.smtp_host)
         .unwrap()
         .credentials(creds)
+        .port(config.smtp_port)
         .build();
 
     // Send the email
