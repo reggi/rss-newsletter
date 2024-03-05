@@ -1,12 +1,12 @@
 use clap::{Arg, ArgAction, Command};
-use rssnewsletter::flags::{feed_arg, sqlite_file_arg};
-use rssnewsletter::model::Model;
+use rss_newsletter::flags::{feed_arg, sqlite_file_arg};
+use rss_newsletter::model::Model;
 
 #[tokio::main]
 async fn main() {
     print!("Starting");
 
-    let matches = Command::new("rssnewsletter")
+    let matches = Command::new("rss-newsletter")
         .version("1.0")
         .author("Your Name <your_email@example.com>")
         .about("Sends newsletter updates from an RSS feed")

@@ -1,4 +1,4 @@
-use rssnewsletter::config::get_config;
+use rss_newsletter::config::get_config;
 
 #[tokio::main]
 async fn main() {

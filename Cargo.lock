@@ -2149,7 +2149,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rssnewsletter"
+name = "rss-newsletter"
 version = "0.1.0"
 dependencies = [
  "actix-web",

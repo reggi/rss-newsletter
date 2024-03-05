@@ -1,9 +1,9 @@
 // #![allow(warnings)]
 
-use rssnewsletter::config::get_config;
-use rssnewsletter::context::Context;
-use rssnewsletter::model::Model;
-use rssnewsletter::server::main as server_main;
+use rss_newsletter::config::get_config;
+use rss_newsletter::context::Context;
+use rss_newsletter::model::Model;
+use rss_newsletter::server::main as server_main;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {

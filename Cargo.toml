@@ -1,15 +1,15 @@
 [package]
-name = "rssnewsletter"
+name = "rss-newsletter"
 version = "0.1.0"
 edition = "2021"
-default-run = "main"
+default-run = "rss-newsletter"
 
 [[bin]]
 name = "demo"
 path = "cli/demo.rs"
 
 [[bin]]
-name = "main"
+name = "rss-newsletter"
 path = "src/main.rs"
 
 [[bin]]

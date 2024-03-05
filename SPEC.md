@@ -4,7 +4,7 @@ I'm looking to create a `rust` server that uses a `sqlite` db.
 
 The goals of the progam are as follows:
 
-* The script would be called `rssnewsletter`.
+* The script would be called `rss-newsletter`.
 * The goal is to email a list of people updates from an rss feed.
 * The script fetches rss feed and caches which posts have been sent out.
 * Initially when the script is first run and the database is fresh we just mark all recent posts as already `skip`.

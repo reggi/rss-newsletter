@@ -17,7 +17,7 @@ pub struct Config {
 }
 
 pub fn get_config() -> Config {
-    let matches = Command::new("rssnewsletter")
+    let matches = Command::new("rss-newsletter")
         .version("1.0")
         .author("Your Name <your_email@example.com>")
         .about("Sends newsletter updates from an RSS feed")
