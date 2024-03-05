@@ -18,9 +18,18 @@ jobs:
         with:
           toolchain: stable
           override: true
-      
+
+      - name: Cache sqlx-cli
+        uses: actions/cache@4
+        with:
+          path: |
+            ~/.cargo/bin/sqlx-cli
+          key: ${{ runner.os }}-sqlx-cli-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sqlx-cli-
+
       - name: Install SQLx CLI
-        run: cargo install sqlx-cli
+        run: cargo install sqlx-cli || true
 
       - name: Create Database Directory
         run: mkdir -p ${{ github.workspace }}/data
