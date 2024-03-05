@@ -20,7 +20,7 @@ jobs:
           override: true
 
       - name: Cache sqlx-cli
-        uses: actions/cache@4
+        uses: actions/cache@2
         with:
           path: |
             ~/.cargo/bin/sqlx-cli
