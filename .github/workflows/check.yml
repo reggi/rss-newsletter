@@ -1,0 +1,26 @@
+name: Rust Code Validation
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      
+      - name: Build
+        run: cargo check
+
+      - name: Build
+        run: cargo build
