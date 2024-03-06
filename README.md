@@ -1,9 +1,3 @@
-# `rss-newsletter` (`rssn`)
-
-* The goal of this project is to take an RSS feed and turn it into a newsletter.
-* This uses `smtp` to send emails through your account, can use `gmail` or `Google Workspace`.
-* Contains a server with two forms for `subscribe` / `unsubscribe`.
-* Uses `sqlite` to store subscriber / which emails have been sent to whom.
 * Containts a `script` for cron to send daily or weekly emails, "latest only".
 * You can use `env` vars instead of flags.
 
