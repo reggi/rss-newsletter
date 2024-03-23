@@ -61,6 +61,7 @@ jobs:
         id: create_or_reuse_release
         uses: actions/github-script@v6
         with:
+          result-encoding: string
           script: |
             const tag = process.env.GITHUB_REF.replace('refs/tags/', '');
             const owner = context.repo.owner
@@ -71,7 +72,7 @@ jobs:
             let release = await github.rest.repos.getReleaseByTag({ owner, repo, tag });
             const upload_url = release.data.upload_url
             console.log(`Upload URL: ${upload_url}`)
-            return { upload_url };
+            return upload_url
 
       # Upload Release Asset
       - name: Upload Release Asset
@@ -83,7 +84,7 @@ jobs:
             const ubuntu_version = '${{ steps.get_ubuntu_version.outputs.ubuntu_version }}';
             const asset_path = `./rss-newsletter-ubuntu-${ubuntu_version}.tar.gz`;
             const asset_name = path.basename(asset_path);
-            const upload_url = '${{ steps.create_or_reuse_release.outputs.upload_url }}';
+            const upload_url = '${{ steps.create_or_reuse_release.outputs.result }}';
             const asset_content_type = 'application/gzip';
             const asset_size = fs.statSync(asset_path).size;
             const asset_bytes = fs.readFileSync(asset_path);
