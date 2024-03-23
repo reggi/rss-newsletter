@@ -32,11 +32,8 @@ jobs:
         with:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
+            ~/.cargo/**
+            ${{ github.workspace }}/target/**
 
       - name: Build Release
         run: sh ./shell/buildrelease.sh "${{ github.workspace }}"
@@ -45,22 +42,60 @@ jobs:
         run: |
           tar -czvf rss-newsletter-ubuntu-${{ steps.get_ubuntu_version.outputs.ubuntu_version }}.tar.gz -C ./target/release rss-newsletter
 
-      - name: Create Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Check for existing release and create or reuse it
+      - name: Create or Reuse Release
+        id: create_or_reuse_release
+        uses: actions/github-script@v6
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+          script: |
+            const tag_name = process.env.GITHUB_REF.replace('refs/tags/', '');
+            let release;
+            try {
+              // Attempt to get the release by the tag
+              release = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: tag_name
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                // If not found, create a new release
+                const response = await github.rest.repos.createRelease({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  tag_name: tag_name,
+                  name: `Release ${tag_name}`,
+                  draft: false,
+                  prerelease: false,
+                });
+                release = response.data;
+              } else {
+                throw error;
+              }
+            }
+            return { upload_url: release.upload_url };
 
+      # Upload Release Asset
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/github-script@v6
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./rss-newsletter-ubuntu-${{ steps.get_ubuntu_version.outputs.ubuntu_version }}.tar.gz
-          asset_name: rss-newsletter-ubuntu-${{ steps.get_ubuntu_version.outputs.ubuntu_version }}.tar.gz
-          asset_content_type: application/gzip
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const ubuntu_version = '${{ steps.get_ubuntu_version.outputs.ubuntu_version }}';
+            const asset_path = `./rss-newsletter-ubuntu-${ubuntu_version}.tar.gz`;
+            const asset_name = path.basename(asset_path);
+            const upload_url = '${{ steps.create_or_reuse_release.outputs.upload_url }}';
+            const asset_content_type = 'application/gzip';
+            const asset_size = fs.statSync(asset_path).size;
+            const asset_bytes = fs.readFileSync(asset_path);
+
+            await github.rest.repos.uploadReleaseAsset({
+              url: upload_url,
+              headers: {
+                'content-type': asset_content_type,
+                'content-length': asset_size
+              },
+              name: asset_name,
+              data: asset_bytes,
+            });
