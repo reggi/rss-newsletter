@@ -53,7 +53,7 @@ jobs:
           # cargo sqlx migrate run
           # cargo build --release
           mkdir -p target/release
-          touch meow.txt
+          touch target/release/meow.txt
           tar -czvf rss-newsletter-ubuntu-${{ steps.get_ubuntu_version.outputs.ubuntu_version }}.tar.gz -C ./target/release meow.txt
 
     # Check for existing release and create or reuse it
