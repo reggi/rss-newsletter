@@ -60,35 +60,14 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const tag_name = process.env.GITHUB_REF.replace('refs/tags/', '');
+            const tag = process.env.GITHUB_REF.replace('refs/tags/', '');
+            const owner = context.repo.owner
+            const repo = context.repo.repo
             console.log(`Tag name: ${tag_name}`)
-            let release;
-            try {
-              // Attempt to get the release by the tag
-              release = await github.rest.repos.getReleaseByTag({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                tag: tag_name
-              });
-            } catch (error) {
-              if (error.status === 404) {
-                // If not found, create a new release
-                const response = await github.rest.repos.createRelease({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  tag_name: tag_name,
-                  name: `Release ${tag_name}`,
-                  draft: false,
-                  prerelease: false,
-                });
-                release = response.data;
-              } else {
-                throw error;
-              }
-            }
+            let release = await github.rest.repos.getReleaseByTag({ owner, repo, tag });
             const upload_url = release.upload_url
             console.log(`Upload URL: ${upload_url}`)
-            return { upload_url  };
+            return { upload_url };
 
       # Upload Release Asset
       - name: Upload Release Asset
