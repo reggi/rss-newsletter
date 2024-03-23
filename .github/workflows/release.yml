@@ -49,6 +49,7 @@ jobs:
         with:
           script: |
             const tag_name = process.env.GITHUB_REF.replace('refs/tags/', '');
+            console.log(`Tag name: ${tag_name}`)
             let release;
             try {
               // Attempt to get the release by the tag
@@ -73,7 +74,9 @@ jobs:
                 throw error;
               }
             }
-            return { upload_url: release.upload_url };
+            const upload_url = release.upload_url
+            console.log(`Upload URL: ${upload_url}`)
+            return { upload_url  };
 
       # Upload Release Asset
       - name: Upload Release Asset
@@ -89,6 +92,12 @@ jobs:
             const asset_content_type = 'application/gzip';
             const asset_size = fs.statSync(asset_path).size;
             const asset_bytes = fs.readFileSync(asset_path);
+
+            console.log(`Ubuntu version: ${ubuntu_version}`);
+            console.log(`Asset path: ${asset_path}`);
+            console.log(`Asset name: ${asset_name}`);
+            console.log(`Upload URL: ${upload_url}`);
+            console.log(`Asset size: ${asset_size}`);
 
             await github.rest.repos.uploadReleaseAsset({
               url: upload_url,
