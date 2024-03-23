@@ -63,7 +63,7 @@ jobs:
             const tag = process.env.GITHUB_REF.replace('refs/tags/', '');
             const owner = context.repo.owner
             const repo = context.repo.repo
-            console.log(`Tag name: ${tag_name}`)
+            console.log(`Tag name: ${tag}`)
             let release = await github.rest.repos.getReleaseByTag({ owner, repo, tag });
             const upload_url = release.upload_url
             console.log(`Upload URL: ${upload_url}`)
