@@ -69,8 +69,7 @@ jobs:
             console.log(`Owner: ${owner}`)
             console.log(`Repo: ${repo}`)
             let release = await github.rest.repos.getReleaseByTag({ owner, repo, tag });
-            console.log({ release })
-            const upload_url = release.upload_url
+            const upload_url = release.data.upload_url
             console.log(`Upload URL: ${upload_url}`)
             return { upload_url };
 
