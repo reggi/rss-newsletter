@@ -1,63 +1,43 @@
-name: Rust Build and Release
-
-permissions:
-  contents: write
-
-on:
-  push:
-    tags:
-      - 'v*'
-
 jobs:
   build:
     name: Build and Release
-    runs-on: ubuntu@18
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
-
+      
+      - name: Get Ubuntu version
+        id: get_ubuntu_version
+        run: |
+          echo "UBUNTU_VERSION=$(lsb_release -rs)" >> $GITHUB_ENV
+          echo "::set-output name=ubuntu_version::$(lsb_release -rs)"
+      
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
 
-      - name: Install SQLx CLI
-        run: cargo install sqlx-cli
+      # Additional steps...
 
-      - name: Create Database Directory
-        run: mkdir -p ${{ github.workspace }}/data
-
-      - name: Create Database
-        env:
-          DATABASE_URL: sqlite://${{ github.workspace }}/data/newsletter.sqlite
+      - name: Archive Release Build
         run: |
-          echo "DATABASE_URL=${DATABASE_URL}" >> $GITHUB_ENV
-          cargo sqlx database create
-
-      - name: Run Migrations
-        run: cargo sqlx migrate run
-
-      - name: Build Release
-        run: cargo build --release
+          tar -czvf rss-newsletter-ubuntu-${{ steps.get_ubuntu_version.outputs.ubuntu_version }}.tar.gz -C ./target/release rss-newsletter
 
       - name: Create Release
-        id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          release_name: Release ${{ github.ref }} Ubuntu ${{ steps.get_ubuntu_version.outputs.ubuntu_version }}
           draft: false
           prerelease: false
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/release/rss-newsletter
-          asset_name: rss-newsletter-${{ github.run_number }}
-          asset_content_type: application/octet-stream
+          asset_path: ./rss-newsletter-ubuntu-${{ steps.get_ubuntu_version.outputs.ubuntu_version }}.tar.gz
+          asset_name: rss-newsletter-ubuntu-${{ steps.get_ubuntu_version.outputs.ubuntu_version }}.tar.gz
+          asset_content_type: application/gzip
