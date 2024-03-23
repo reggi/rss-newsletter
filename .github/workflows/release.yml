@@ -47,14 +47,12 @@ jobs:
 
       - name: Build Release
         run: |
-          # cargo install sqlx-cli
-          # export DATABASE_URL=sqlite://${{ github.workspace }}/newsletter.sqlite
-          # cargo sqlx database create
-          # cargo sqlx migrate run
-          # cargo build --release
-          mkdir -p target/release
-          touch target/release/meow.txt
-          tar -czvf rss-newsletter-ubuntu-${{ steps.get_ubuntu_version.outputs.ubuntu_version }}.tar.gz -C ./target/release meow.txt
+          cargo install sqlx-cli
+          export DATABASE_URL=sqlite://${{ github.workspace }}/newsletter.sqlite
+          cargo sqlx database create
+          cargo sqlx migrate run
+          cargo build --release
+          tar -czvf rss-newsletter-ubuntu-${{ steps.get_ubuntu_version.outputs.ubuntu_version }}.tar.gz -C ./target/release rss-newsletter
 
     # Check for existing release and create or reuse it
       - name: Create or Reuse Release
