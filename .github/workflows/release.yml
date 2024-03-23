@@ -28,18 +28,30 @@ jobs:
           toolchain: stable
           override: true
 
-      - uses: actions/cache@v4
+      - name: Prepare cache keys
+        id: cache-keys
+        run: |
+          echo "::set-output name=src-hash::$(find src -type f -name '*.rs' | xargs cat | sha256sum | cut -d ' ' -f 1)"
+          echo "::set-output name=lock-hash::$(sha256sum Cargo.lock | cut -d ' ' -f 1)"
+    
+      # Cache cargo registry and target directory
+      - uses: actions/cache@v2
         with:
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           path: |
-            ~/.cargo/**
-            ${{ github.workspace }}/target/**
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.lock-hash }}-${{ steps.cache-keys.outputs.src-hash }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.lock-hash }}-
+            ${{ runner.os }}-cargo-
 
       - name: Build Release
-        run: sh ./shell/buildrelease.sh "${{ github.workspace }}"
-
-      - name: Archive Release Build
         run: |
+          cargo install sqlx-cli
+          export DATABASE_URL=sqlite://${{ github.workspace }}/newsletter.sqlite
+          cargo sqlx database create
+          cargo sqlx migrate run
+          cargo build --release
           tar -czvf rss-newsletter-ubuntu-${{ steps.get_ubuntu_version.outputs.ubuntu_version }}.tar.gz -C ./target/release rss-newsletter
 
     # Check for existing release and create or reuse it
