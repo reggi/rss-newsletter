@@ -1,4 +1,12 @@
----
+name: Rust Code Check & Build on Push
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.rs'
+
 jobs:
   build_and_test:
     name: Build and Test
@@ -19,25 +27,5 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-      - name: Install SQLx CLI
-        run: cargo install sqlx-cli || true
-      - name: Create Database Directory
-        run: mkdir -p ${{ github.workspace }}/data
-      - env:
-          DATABASE_URL: sqlite://${{ github.workspace }}/data/newsletter.sqlite
-        name: Create Database
-        run: |
-          echo "DATABASE_URL=${DATABASE_URL}" >> $GITHUB_ENV
-          cargo sqlx database create
-
-      - name: Run Migrations
-        run: cargo sqlx migrate run
-      - name: Build
-        run: cargo check
-      - name: Build
-        run: cargo build
-name: Rust Code Validation
-'on':
-  push:
-    branches:
-      - main
+      - name: Build Release
+        run: sh ./shell/buildrelease.sh "${{ github.workspace }}"
