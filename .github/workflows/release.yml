@@ -18,7 +18,24 @@ jobs:
           toolchain: stable
           override: true
 
-      # Additional steps...
+      - name: Install SQLx CLI
+        run: cargo install sqlx-cli
+
+      - name: Create Database Directory
+        run: mkdir -p ${{ github.workspace }}/data
+
+      - name: Create Database
+        env:
+          DATABASE_URL: sqlite://${{ github.workspace }}/data/newsletter.sqlite
+        run: |
+          echo "DATABASE_URL=${DATABASE_URL}" >> $GITHUB_ENV
+          cargo sqlx database create
+
+      - name: Run Migrations
+        run: cargo sqlx migrate run
+
+      - name: Build Release
+        run: cargo build --release
 
       - name: Archive Release Build
         run: |
@@ -30,12 +47,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }} Ubuntu ${{ steps.get_ubuntu_version.outputs.ubuntu_version }}
+          release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./rss-newsletter-ubuntu-${{ steps.get_ubuntu_version.outputs.ubuntu_version }}.tar.gz
